@@ -33,6 +33,7 @@ typedef NS_ENUM (NSInteger, CHTStickerViewPosition) {
 - (void)stickerViewDidEndRotating:(CHTStickerView *)stickerView;
 - (void)stickerViewDidClose:(CHTStickerView *)stickerView;
 - (void)stickerViewDidTap:(CHTStickerView *)stickerView;
+- (UIEdgeInsets)insetsForStickerView:(CHTStickerView *)stickerView;
 @end
 
 @interface CHTStickerView : UIView

@@ -236,36 +236,61 @@ CG_INLINE CGFloat CGPointGetDistance(CGPoint point1, CGPoint point2) {
 #pragma mark - Gesture Handlers
 
 - (void)handleMoveGesture:(UIPanGestureRecognizer *)recognizer {
-  CGPoint touchLocation = [recognizer locationInView:self.superview];
-
-  switch (recognizer.state) {
-    case UIGestureRecognizerStateBegan:
-      beginningPoint = touchLocation;
-      beginningCenter = self.center;
-      if ([self.delegate respondsToSelector:@selector(stickerViewDidBeginMoving:)]) {
-        [self.delegate stickerViewDidBeginMoving:self];
-      }
-      break;
-
-    case UIGestureRecognizerStateChanged:
-      self.center = CGPointMake(beginningCenter.x + (touchLocation.x - beginningPoint.x),
-                                beginningCenter.y + (touchLocation.y - beginningPoint.y));
-      if ([self.delegate respondsToSelector:@selector(stickerViewDidChangeMoving:)]) {
-        [self.delegate stickerViewDidChangeMoving:self];
-      }
-      break;
-
-    case UIGestureRecognizerStateEnded:
-      self.center = CGPointMake(beginningCenter.x + (touchLocation.x - beginningPoint.x),
-                                beginningCenter.y + (touchLocation.y - beginningPoint.y));
-      if ([self.delegate respondsToSelector:@selector(stickerViewDidEndMoving:)]) {
-        [self.delegate stickerViewDidEndMoving:self];
-      }
-      break;
-
-    default:
-      break;
-  }
+    
+    UIEdgeInsets insets = UIEdgeInsetsZero;
+    
+    if (self.delegate && [self.delegate respondsToSelector:@selector(insetsForStickerView:)]) {
+        insets = [self.delegate insetsForStickerView:self];
+    }
+    
+    CGPoint touchLocation = [recognizer locationInView:self.superview];
+    
+    CGFloat newCenterX = beginningCenter.x + (touchLocation.x - beginningPoint.x);
+    CGFloat newCenterY = beginningCenter.y + (touchLocation.y - beginningPoint.y);
+    
+    if (newCenterX < insets.left) {
+        newCenterX = insets.left;
+    } else if (newCenterX > self.superview.bounds.size.width - insets.right) {
+        newCenterX = self.superview.bounds.size.width - insets.right;
+    }
+    
+    if (newCenterY < insets.top) {
+        newCenterY = insets.top;
+    } else if (newCenterY > self.superview.bounds.size.height - insets.bottom) {
+        newCenterY = self.superview.bounds.size.height - insets.bottom;
+    }
+    
+    switch (recognizer.state) {
+        case UIGestureRecognizerStateBegan:
+            beginningPoint = touchLocation;
+            beginningCenter = self.center;
+            if ([self.delegate respondsToSelector:@selector(stickerViewDidBeginMoving:)]) {
+                [self.delegate stickerViewDidBeginMoving:self];
+            }
+            break;
+            
+        case UIGestureRecognizerStateChanged: {
+            
+            self.center = CGPointMake(newCenterX, newCenterY);
+            if ([self.delegate respondsToSelector:@selector(stickerViewDidChangeMoving:)]) {
+                [self.delegate stickerViewDidChangeMoving:self];
+            }
+            
+            break;
+            
+        }
+            
+        case UIGestureRecognizerStateEnded:
+            self.center = CGPointMake(newCenterX, newCenterY);
+            
+            if ([self.delegate respondsToSelector:@selector(stickerViewDidEndMoving:)]) {
+                [self.delegate stickerViewDidEndMoving:self];
+            }
+            break;
+            
+        default:
+            break;
+    }
 }
 
 - (void)handleRotateGesture:(UIPanGestureRecognizer *)recognizer {
